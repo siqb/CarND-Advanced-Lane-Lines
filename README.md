@@ -176,7 +176,35 @@ I verified that my perspective transform was working as expected by drawing the 
 
 #### 4. Describe how (and identify where in your code) you identified lane-line pixels and fit their positions with a polynomial?
 
-Then I did some other stuff and fit my lane lines with a 2nd order polynomial kinda like this:
+Here is the general concept to identifying lane lines:
+
+1. Generate an undistorted, transformed, binary image
+2. Use a sliding window approach to identify a best fit line to fit the lane line. Do this on the first frame only!
+   1. Take a histogram of the bottom half of the image because it is closest to the car
+   2. Find the peak of the histogram because this represents the lane line
+   3. Apply a slide window updwards from this location and search for more non-zero pixels within the window
+   4. Gather all of the detected line pixels into an array
+   5. Fit a second order polynomial to these points - this polynomial represents your lane line!
+3. For all subsequent frames, do not use the sliding window approach. Since we already have a general idea of where the lane should appear based on the last frame, search the new frame within a small margin on the previous best fit line. We could use the sliding window approach on each frame throughout the entire video but seearching within a margin is more computationally efficient. 
+    1. Take the best fit line from the previous fram
+    2. Find non-zero pixels in the vicinity of this previous best fit line
+    3. Gather all of the detected line pixels into an array
+    4. Fit a second order polynomial to these points - this polynomial represents your lane line!
+
+This is the code in ```pipeline_main``` for calling the functions that identify lane lines. As you can see, it calls the less efficent ```find_lines``` only for the first frame. After that, it always calls ```find_lines_in_margin```.
+
+```python
+# Use sliding windows approach for first frame only
+if self.frame_counter <= 0:
+    img_left = self.left_line.find_lines(img_tx)
+    img_right = self.right_line.find_lines(img_tx)
+# After first frame, search within a margin of the previous best fit line
+else:
+    img_left = self.left_line.find_lines_in_margin(img_tx,self.left_line.recent_fitted[-1])
+    img_right = self.right_line.find_lines_in_margin(img_tx,self.right_line.recent_fitted[-1])
+self.frame_counter += 1
+```
+I will not reproduce the code for ```find_lines``` and ```find_lines_in_margin``` since it mostly came from the course lecture material with only minor modifications.
 
 ![alt text][image5]
 
@@ -246,7 +274,7 @@ The general idea here is:
 3. Subtract the center of the lane from the position of the camera and convert from pixels to meters
 4. Calculate a running average of the vehicle position over a fixed number of frames so it isn't so jittery
 
-I got a consistent negative vehicle offset throughout the duration of the entire vidoe clip. This indicates that the car was driving left of center for the entire duration. I visited the Udacity forums and learned that this is indeed the case! The magnitude of the offset is larger around curves than on straight portions of road which intuitively makes sense because drivers naturally tend to drift to left around curves - at least in the USA where the driver always sits on the left side of the vehicle. 
+I got a consistent negative vehicle offset throughout the duration of the entire video clip. This indicates that the car was driving left of center for the entire duration. I visited the Udacity forums and learned that this is indeed the case! The magnitude of the offset is larger around curves than on straight portions of road which intuitively makes sense because drivers naturally tend to drift to left around curves - at least in the USA where the driver always sits on the left side of the vehicle. 
 
 #### 6. Provide an example image of your result plotted back down onto the road such that the lane area is identified clearly.
 
@@ -257,7 +285,7 @@ The method I used to highlight the lane was:
 3. Construct a rectangular polygon out of these vertices on its own image
 4. Unwarp the polygon image
 5. Combine the unwarped polygon image with the original image
-6. Do this for every frame
+6. Repeat for every frame
 
 The code is in ```project.py``` from lines 402 - 417 (line numbers subject to change!) but is reproduced here:
 
@@ -280,7 +308,7 @@ poly_img = self.transform(poly_img, operation="unwarp")
 img = cv2.addWeighted(img, 1, poly_img, 0.3, 0)
 ```
 
-The result is a very smooth green polygon which perfectly follows the lane throughout the entire video clip.
+The result is a very smooth green polygon which perfectly highlights the ego-lane throughout the entire video clip. It does not jitter and perfectly hugs the left and right lane lines in every single frame.
 
 ### Pipeline (video)
 
@@ -294,4 +322,17 @@ Here's a [link to my video result](./project_video.mp4)
 
 #### 1. Briefly discuss any problems / issues you faced in your implementation of this project.  Where will your pipeline likely fail?  What could you do to make it more robust?
 
-Here I'll talk about the approach I took, what techniques I used, what worked and why, where the pipeline might fail and how I might improve it if I were going to pursue this project further.  
+##### Fragile Color Mask
+
+As with several of the other projects, my implementation makes huge assumptions about its ability to identify the lane lines based on color and lighting conditions. This will certainly break down under the right conditions. An improvement could be to dynamically change the color mask values based on some external indicator of road conditions. For example, in overcast conditions, the low threshold for detecting a given color may need to be lowered.
+
+##### Urban Environments
+
+I suspect that this kind of pipeline would also not work well in urban enviornments. As with other projects, the test video is a long stretch of relatively empty highway and therefore we are able to smooth out irregularities by averaging certain measurements across several frames. It is probably not reasonable to expect to be able to average over so many frames in a busy city atomosphere where so much can happen in the span of just a couple of frames. For example, a single sudden sharp right turn at an intersection would ruin the run averages collected over several frames. Of course there are ways to mitigate this (mapping, path planning, etc.) but the pipeline as it stands would not be sufficient.
+
+##### Use Deep Learning
+
+An improvement would be to implement a neural network just for the purpose of detecting lane lines. As we have seen from previous projects, neural networks are only as good as the data set you feed them but in my opinion, its still a less fragile approach than attempting to manually extract color information from lines on the fly. For example, I have personally seen lane lines where the paint is faded away or painted over for several continuous meters. This kind of pipeline would fail as soon as the lane line disappears but a deep learning approach could infer that the two non-continuous line segments are part of the same lane line.  
+
+
+
