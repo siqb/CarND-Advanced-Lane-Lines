@@ -169,6 +169,8 @@ class Line():
         # Draw the fit lines
         for i in range(0,720):
             out_img[i][int(round(line_fitx[i]))]=[100,100,100]
+
+        # Uncomment to generate a static image
         #plt.imshow(out_img)
         #plt.plot(line_fitx, ploty, color='yellow')
         #plt.xlim(0, 1280)
@@ -225,6 +227,8 @@ class Line():
         result = cv2.addWeighted(out_img, 1, window_img, 0.3, 0)
         for i in range(0,720):
             result[i][int(round(line_fitx[i]))]=[100,100,100]
+
+        # Uncomment to generate a static image
         #plt.imshow(result)
         #plt.plot(line_fitx, ploty, color='yellow')
         #plt.xlim(0, 1280)
@@ -418,32 +422,42 @@ class MyVideoProcessor(object):
         for i in range(0,20):
             right_vertices.append([int(round(self.right_line.recent_xfitted[-1][i*719//20])),i*719//20])
         vertices = np.array([left_vertices + right_vertices[::-1]])
-        poly_img = np.zeros_like(img)
-        poly_img = cv2.flip(poly_img,1)
-        cv2.fillPoly(poly_img, [vertices], [0,255, 0])
+        img_poly = np.zeros_like(img)
+        img_poly = cv2.flip(img_poly,1)
+        cv2.fillPoly(img_poly, [vertices], [0,255, 0])
         
         # Unwarp polygon and project back onto original image
-        poly_img = self.unwarp(poly_img)
-        img = cv2.addWeighted(img, 1, poly_img, 0.3, 0)
+        img_poly = self.transform(img_poly, operation="unwarp")
+        img_final = np.copy(img)
+        img_final = cv2.addWeighted(img, 1, img_poly, 0.3, 0)
         
         # Print KPIs on screen
         left_curve_text = "Left Curvature = " + str(round(left_curvature,2)) + "m"
-        cv2.putText(img, left_curve_text, (100,100), 
+        cv2.putText(img_final, left_curve_text, (100,100), 
                     cv2.FONT_HERSHEY_SIMPLEX,
                     1.0,(255,255,255),
                     lineType=cv2.LINE_AA)
         right_curve_text = "Right Curvature = " + str(round(right_curvature,2)) + "m"
-        cv2.putText(img, right_curve_text, (100,150), 
+        cv2.putText(img_final, right_curve_text, (100,150), 
                     cv2.FONT_HERSHEY_SIMPLEX,
                     1.0,(255,255,255),
                     lineType=cv2.LINE_AA)
         offset_text = "Offset = " + str(round(vehicle_pos,2)) + "m"
-        cv2.putText(img, offset_text, (100,200), 
+        cv2.putText(img_final, offset_text, (100,200), 
                     cv2.FONT_HERSHEY_SIMPLEX,
                     1.0,(255,255,255),lineType=cv2.LINE_AA)
 
         print("#####Done processing frame#####")
-        return img
+
+        # Uncomment to generate a static image
+        #plt.imshow(img)
+        #plt.imshow(img_binary)
+        #plt.imshow(img_tx)
+        #plt.imshow(img_debug)
+        #plt.imshow(img_poly)
+        #plt.imshow(img_final)
+        
+        return img_final
 
 if __name__ == "__main__":
    
