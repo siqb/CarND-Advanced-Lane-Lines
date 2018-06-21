@@ -469,29 +469,6 @@ class Line():
         return result
 
 
-def unwarp(img):
-    print("Perfoming perspective transform on image")
-    w,h = 1280,720
-    x,y = 0.5*w, 0.8*h
-    src = np.float32([[200./1280*w,720./720*h],
-                  [453./1280*w,547./720*h],
-                  [835./1280*w,547./720*h],
-                  [1100./1280*w,720./720*h]])
-    dst = np.float32([[(w-x)/2.,h],
-                  [(w-x)/2.,0.82*h],
-                  [(w+x)/2.,0.82*h],
-                  [(w+x)/2.,h]])    
-    
-    # Grab the image shape
-    img_size = (img.shape[1], img.shape[0])
-    M = cv2.getPerspectiveTransform(src, dst)
-    #Compute the inverse perspective transform:
-    M_inv = cv2.getPerspectiveTransform(dst, src)
-    #Warp an image using the perspective transform, M:
-    unwarped = cv2.warpPerspective(img, M_inv, img_size)
-    #warped = cv2.warpPerspective(img, M, img_size, flags=cv2.INTER_LINEAR)
-    return unwarped
-
 
 def create_color_binary(img, s_thresh=(170, 255), sx_thresh=(20, 100)):
     print("Creating color binary of image")
@@ -645,6 +622,29 @@ class MyVideoProcessor(object):
         #warped = cv2.warpPerspective(img, M, img_size, flags=cv2.INTER_LINEAR)
         return warped
 
+    def unwarp(self,img):
+        print("Perfoming perspective transform on image")
+        w,h = 1280,720
+        x,y = 0.5*w, 0.8*h
+        src = np.float32([[200./1280*w,720./720*h],
+                      [453./1280*w,547./720*h],
+                      [835./1280*w,547./720*h],
+                      [1100./1280*w,720./720*h]])
+        dst = np.float32([[(w-x)/2.,h],
+                      [(w-x)/2.,0.82*h],
+                      [(w+x)/2.,0.82*h],
+                      [(w+x)/2.,h]])    
+        
+        # Grab the image shape
+        img_size = (img.shape[1], img.shape[0])
+        M = cv2.getPerspectiveTransform(src, dst)
+        #Compute the inverse perspective transform:
+        M_inv = cv2.getPerspectiveTransform(dst, src)
+        #Warp an image using the perspective transform, M:
+        unwarped = cv2.warpPerspective(img, M_inv, img_size)
+        #warped = cv2.warpPerspective(img, M, img_size, flags=cv2.INTER_LINEAR)
+        return unwarped
+
     def get_vehicle_position(self, image):
         
         # Center col of image gives position of camera (and hence the car).
@@ -733,7 +733,7 @@ class MyVideoProcessor(object):
         #cv2.rectangle(img,top_left,bottom_right,(0,255,0), 2)
 
 
-        poly_img = unwarp(poly_img)
+        poly_img = self.unwarp(poly_img)
         img = cv2.addWeighted(img, 1, poly_img, 0.3, 0)
         
         left_curve_text = "Left Curvature = " + str(round(left_curvature,2)) + "m"
