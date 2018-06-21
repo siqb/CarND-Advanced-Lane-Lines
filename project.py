@@ -241,12 +241,10 @@ class Line():
         else:
             self.recent_xfitted = [fit]
 
-    #def get_curvature(self, img, left_lane_inds, right_lane_inds):
-    #def get_curvature(self, img, left_lane_inds):
     def get_curvature(self, img):
+        # Define conversions in x and y from pixels space to meters
         ym_per_pix = 30/720 # meters per pixel in y dimension
         xm_per_pix = 3.7/700 # meters per pixel in x dimension
-    
     
         ploty = np.linspace(0, 719, num=720)# to cover same y-range as image    
         
@@ -258,61 +256,20 @@ class Line():
         nonzeroy = np.array(nonzero[0])
         nonzerox = np.array(nonzero[1])
         
-        # Again, extract left and right line pixel positions
-        #left_lane_inds = self.allx 
-        #left_lane_inds = self.average_xfitted 
-        #left_lane_inds = self.avg_allx 
-        #left_lane_inds = self.avg_lane_inds 
-
-        leftx = nonzerox[self.lane_inds[-1]]
-        lefty = nonzeroy[self.lane_inds[-1]] 
-
-        #leftx = self.avg_allx
-        #lefty = self.avg_ally
-        
-        #leftx = np.array(self.allx)
-        #lefty = np.array(self.ally)
-
-        print("my leftx", leftx)
-
-        #rightx = nonzerox[right_lane_inds]
-        #righty = nonzeroy[right_lane_inds]
-        
-        left_fit_cr = np.polyfit(lefty*ym_per_pix, leftx*xm_per_pix, 2)
-        #right_fit_cr = np.polyfit(righty*ym_per_pix, rightx*xm_per_pix, 2)
-        
-        # Calculate the new radii of curvature
-        left_curverad = ((1 + (2*left_fit_cr[0]*y_eval*ym_per_pix + left_fit_cr[1])**2)**1.5) / np.absolute(2*left_fit_cr[0])
-        
-
-        #left_curve_fitx = (left_fit_cr[0]*y_eval*ym_per_pix)**2 + left_fit_cr[1]*yeval*
-
-        #right_curverad = ((1 + (2*right_fit_cr[0]*y_eval*ym_per_pix + right_fit_cr[1])**2)**1.5) / np.absolute(2*right_fit_cr[0])
-        #rturn the curvature values in metres
-        #return left_curverad, right_curverad
-        self.radius_of_curvature.append(left_curverad)
-        self.avg_curvature = sum(self.radius_of_curvature)/len(self.radius_of_curvature)
-
-
-
-
-        return self.avg_curvature
-
-        """
-        # Define conversions in x and y from pixels space to meters
-        ym_per_pix = 30/720 # meters per pixel in y dimension
-        xm_per_pix = 3.7/700 # meters per pixel in x dimension
+        # Again, extract line pixel positions
+        linex = nonzerox[self.lane_inds[-1]]
+        liney = nonzeroy[self.lane_inds[-1]] 
         
         # Fit new polynomials to x,y in world space
-        left_fit_cr = np.polyfit(ploty*ym_per_pix, leftx*xm_per_pix, 2)
-        right_fit_cr = np.polyfit(ploty*ym_per_pix, rightx*xm_per_pix, 2)
+        line_fit_cr = np.polyfit(liney*ym_per_pix, linex*xm_per_pix, 2)
         # Calculate the new radii of curvature
-        left_curverad = ((1 + (2*left_fit_cr[0]*y_eval*ym_per_pix + left_fit_cr[1])**2)**1.5) / np.absolute(2*left_fit_cr[0])
-        right_curverad = ((1 + (2*right_fit_cr[0]*y_eval*ym_per_pix + right_fit_cr[1])**2)**1.5) / np.absolute(2*right_fit_cr[0])
+        line_curverad = ((1 + (2*line_fit_cr[0]*y_eval*ym_per_pix + line_fit_cr[1])**2)**1.5) / np.absolute(2*line_fit_cr[0])
+        
         # Now our radius of curvature is in meters
-        print(left_curverad, 'm', right_curverad, 'm')
-        # Example values: 632.1 m    626.2 m
-        """
+        # Return the curvature values in metres
+        self.radius_of_curvature.append(line_curverad)
+        self.avg_curvature = sum(self.radius_of_curvature)/len(self.radius_of_curvature)
+        return self.avg_curvature
     
     def find_lines(self, binary_warped):
         # Assuming you have created a warped binary image called "binary_warped"
