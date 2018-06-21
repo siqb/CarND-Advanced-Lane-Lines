@@ -30,20 +30,13 @@ class Line():
         #difference in fit coefficients between last and new fits
         self.diffs = np.array([0,0,0], dtype='float') 
         #x values for detected line pixels
-        #self.allx = None  
-        self.allx = collections.deque(maxlen=10)  
+        self.allx = None  
         #y values for detected line pixels
-        #self.ally = None
-        self.ally = collections.deque(maxlen=10)
+        self.ally = None
         self.N_SAMPLES = 10
 
-        self.average_xfitted = 0
         self.lane_inds = collections.deque(maxlen=30)
         self.avg_lane_inds = None
-        #self.avg_allx = collections.deque(maxlen=10)
-        #self.avg_ally = collections.deque(maxlen=10)
-        self.avg_allx = None 
-        self.avg_ally = None 
         self.avg_curvature = None
 
     def calculate_average_fit(self):
@@ -55,9 +48,6 @@ class Line():
 
     def calculate_average_fit2(self):
         # Average fit of left line
-        self.average_xfitted = sum(self.recent_xfitted)//len(self.recent_xfitted)
-        #self.avg_allx = sum(self.allx)//len(self.allx)
-        #self.avg_ally = sum(self.allx)//len(self.ally)
         #print("lane inds", self.lane_inds)
         #print("sum lane inds", sum(self.lane_inds))
         #self.avg_lane_inds = sum(self.lane_inds)//len(self.lane_inds)
@@ -176,10 +166,6 @@ class Line():
         #plt.xlim(0, 1280)
         #plt.ylim(720, 0)
     
-        #self.allx = nonzerox[line_lane_inds]
-        #self.ally = nonzeroy[line_lane_inds]
-        self.allx.append(nonzerox[line_lane_inds].astype(np.float))
-        self.ally.append(nonzeroy[line_lane_inds].astype(np.float))
         self.lane_inds.append(line_lane_inds)
         self.recent_xfitted.append(line_fitx)
         self.recent_fitted.append(line_fit)
@@ -234,17 +220,11 @@ class Line():
         #plt.xlim(0, 1280)
         #plt.ylim(720, 0)
 
-        #self.allx = linex
-        #self.ally = liney
 
         ##self.save_current_fit(line_fit, line_fitx)
         ##self.calculate_average_fit()
         #return result
 
-        #self.allx = nonzerox[line_lane_inds]
-        #self.ally = nonzeroy[line_lane_inds]
-        self.allx.append(nonzerox[line_lane_inds].astype(np.float))
-        self.ally.append(nonzeroy[line_lane_inds].astype(np.float))
         self.lane_inds.append(line_lane_inds)
         self.recent_xfitted.append(line_fitx)
         self.recent_fitted.append(line_fit)
