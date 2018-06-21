@@ -96,33 +96,33 @@ I used a mask on my undistorted image to create a thresholded binary image. The 
 This code can be found in the ```mask()``` function in ```project.py```. Exact line numbers are subject to change but it can currently be found at line 497. The code is also reproduced here below:
 
 ```python
-    def mask(self,img):
-        #Thresholds
-        yellow_lower_filter = np.array([0, 100, 100])
-        yellow_upper_filter = np.array([80, 255, 255])
-    
-        white_lower_filter = np.array([200, 200, 200])
-        white_upper_filter = np.array([255, 255, 255])
-    
-        #yellow masking
-        hsv = cv2.cvtColor(img, cv2.COLOR_RGB2HSV)
-        yellow_mask = cv2.inRange(hsv, yellow_lower_filter, yellow_upper_filter)
-        yellow_mask = cv2.bitwise_and(img, img, mask=yellow_mask)
-    
-        #white masking
-        rgb = img
-        white_mask = cv2.inRange(rgb, white_lower_filter, white_upper_filter)
-        white_mask = cv2.bitwise_and(img, img, mask=white_mask)
-    
-        #combined masks
-        combined_mask = cv2.addWeighted(white_mask, 1., yellow_mask, 1., 0.)
-    
-        #convert to binary image
-        # Just convert to grayscale and then set a threshold for anything greater then 0 for that gray 
-        gray_mask = cv2.cvtColor(combined_mask, cv2.COLOR_RGB2GRAY)
-        binary = np.zeros_like(gray_mask)
-        binary[(gray_mask > 0)] = 1
-        return binary
+def mask(self,img):
+    #Thresholds
+    yellow_lower_filter = np.array([0, 100, 100])
+    yellow_upper_filter = np.array([80, 255, 255])
+
+    white_lower_filter = np.array([200, 200, 200])
+    white_upper_filter = np.array([255, 255, 255])
+
+    #yellow masking
+    hsv = cv2.cvtColor(img, cv2.COLOR_RGB2HSV)
+    yellow_mask = cv2.inRange(hsv, yellow_lower_filter, yellow_upper_filter)
+    yellow_mask = cv2.bitwise_and(img, img, mask=yellow_mask)
+
+    #white masking
+    rgb = img
+    white_mask = cv2.inRange(rgb, white_lower_filter, white_upper_filter)
+    white_mask = cv2.bitwise_and(img, img, mask=white_mask)
+
+    #combined masks
+    combined_mask = cv2.addWeighted(white_mask, 1., yellow_mask, 1., 0.)
+
+    #convert to binary image
+    # Just convert to grayscale and then set a threshold for anything greater then 0 for that gray 
+    gray_mask = cv2.cvtColor(combined_mask, cv2.COLOR_RGB2GRAY)
+    binary = np.zeros_like(gray_mask)
+    binary[(gray_mask > 0)] = 1
+    return binary
 ```
 
 
@@ -137,28 +137,28 @@ Here's an example of my output for this step.  (note: this is not actually from 
 The code for my perspective transform includes a function called `warper()`, which appears in lines 1 through 8 in the file `example.py` (output_images/examples/example.py) (or, for example, in the 3rd code cell of the IPython notebook).  The `warper()` function takes as inputs an image (`img`), as well as source (`src`) and destination (`dst`) points.  I chose the hardcode the source and destination points in the following manner:
 
 ```python
-    def transform(self,img):
-        print("Perfoming perspective transform on image")
-        w,h = 1280,720
-        x,y = 0.5*w, 0.8*h
-        src = np.float32([[200./1280*w,720./720*h],
-                      [453./1280*w,547./720*h],
-                      [835./1280*w,547./720*h],
-                      [1100./1280*w,720./720*h]])
-        dst = np.float32([[(w-x)/2.,h],
-                      [(w-x)/2.,0.82*h],
-                      [(w+x)/2.,0.82*h],
-                      [(w+x)/2.,h]])    
-        
-        # Grab the image shape
-        img_size = (img.shape[1], img.shape[0])
-        M = cv2.getPerspectiveTransform(src, dst)
-        #Compute the inverse perspective transform:
-        M_inv = cv2.getPerspectiveTransform(dst, src)
-        #Warp an image using the perspective transform, M:
-        warped = cv2.warpPerspective(img, M, img_size)
-        #warped = cv2.warpPerspective(img, M, img_size, flags=cv2.INTER_LINEAR)
-        return warped
+def transform(self,img):
+    print("Perfoming perspective transform on image")
+    w,h = 1280,720
+    x,y = 0.5*w, 0.8*h
+    src = np.float32([[200./1280*w,720./720*h],
+                  [453./1280*w,547./720*h],
+                  [835./1280*w,547./720*h],
+                  [1100./1280*w,720./720*h]])
+    dst = np.float32([[(w-x)/2.,h],
+                  [(w-x)/2.,0.82*h],
+                  [(w+x)/2.,0.82*h],
+                  [(w+x)/2.,h]])    
+
+    # Grab the image shape
+    img_size = (img.shape[1], img.shape[0])
+    M = cv2.getPerspectiveTransform(src, dst)
+    #Compute the inverse perspective transform:
+    M_inv = cv2.getPerspectiveTransform(dst, src)
+    #Warp an image using the perspective transform, M:
+    warped = cv2.warpPerspective(img, M, img_size)
+    #warped = cv2.warpPerspective(img, M, img_size, flags=cv2.INTER_LINEAR)
+    return warped
 ```
 
 This resulted in the following source and destination points:
@@ -185,74 +185,102 @@ Then I did some other stuff and fit my lane lines with a 2nd order polynomial ki
 I calculated radius of curvature of the lane in a function called ```get_curvature``` starting at line 266 (number subject to change) in `project.py`. This function is part of the```Line()``` class and is called on a per line basis. Code is reproduced here:
 
 ```python
-    def get_curvature(self, img):
-        # Define conversions in x and y from pixels space to meters
-        ym_per_pix = 30/720 # meters per pixel in y dimension
-        xm_per_pix = 3.7/700 # meters per pixel in x dimension
-    
-        ploty = np.linspace(0, 719, num=720)# to cover same y-range as image    
-        
-        # Choose Y of radius of curvature
-        # Max Y value (bottom of the image)
-        y_eval = np.max(ploty)
-        
-        nonzero = img.nonzero()
-        nonzeroy = np.array(nonzero[0])
-        nonzerox = np.array(nonzero[1])
-        
-        # Again, extract line pixel positions
-        linex = nonzerox[self.lane_inds[-1]]
-        liney = nonzeroy[self.lane_inds[-1]] 
-        
-        # Fit new polynomials to x,y in world space
-        line_fit_cr = np.polyfit(liney*ym_per_pix, linex*xm_per_pix, 2)
-        # Calculate the new radii of curvature
-        line_curverad = ((1 + (2*line_fit_cr[0]*y_eval*ym_per_pix + line_fit_cr[1])**2)**1.5) / np.absolute(2*line_fit_cr[0])
-        
-        # Now our radius of curvature is in meters
-        # Return the curvature values in metres
-        self.radius_of_curvature.append(line_curverad)
-        self.avg_curvature = sum(self.radius_of_curvature)/len(self.radius_of_curvature)
-        return self.avg_curvature
+def get_curvature(self, img):
+    # Define conversions in x and y from pixels space to meters
+    ym_per_pix = 30/720 # meters per pixel in y dimension
+    xm_per_pix = 3.7/700 # meters per pixel in x dimension
+
+    ploty = np.linspace(0, 719, num=720)# to cover same y-range as image    
+
+    # Choose Y of radius of curvature
+    # Max Y value (bottom of the image)
+    y_eval = np.max(ploty)
+
+    nonzero = img.nonzero()
+    nonzeroy = np.array(nonzero[0])
+    nonzerox = np.array(nonzero[1])
+
+    # Again, extract line pixel positions
+    linex = nonzerox[self.lane_inds[-1]]
+    liney = nonzeroy[self.lane_inds[-1]] 
+
+    # Fit new polynomials to x,y in world space
+    line_fit_cr = np.polyfit(liney*ym_per_pix, linex*xm_per_pix, 2)
+    # Calculate the new radii of curvature
+    line_curverad = ((1 + (2*line_fit_cr[0]*y_eval*ym_per_pix + line_fit_cr[1])**2)**1.5) / np.absolute(2*line_fit_cr[0])
+
+    # Now our radius of curvature is in meters
+    # Return the curvature values in metres
+    self.radius_of_curvature.append(line_curverad)
+    self.avg_curvature = sum(self.radius_of_curvature)/len(self.radius_of_curvature)
+    return self.avg_curvature
 ```
 The general idea here is:
 1. Generate a new best fit line through the lane line pixels using a pixels to meters conversion
 2. Calculate the radius of the curvature based on this formula:
 3. Calculate a running average of the radius of curvature over a fixed number of frames so it isn't so jittery
 
-I did this in a function called ```get_vehicle_position``` starting at line 573 (number subject to change) in `project.py`. This function is part of the```MyVideoProcessor()``` class. Code is reproduced here:
+I calculated the vehicle offset from the center of the lane in a function called ```get_vehicle_position``` starting at line 573 (number subject to change) in `project.py`. This function is part of the```MyVideoProcessor()``` class. Code is reproduced here:
 
 ```python
-    def get_vehicle_position(self, image):
-        
-        # Center col of image gives position of camera (and hence the car).
-        camera_position = image.shape[1]/2
-        xm_per_pix = 3.7/700
-    
-        # Center of lane is diff between predicted lane lines at a position closest to the car. 
-        # Image height is 720 pixels so pixel 720 is closet to the car
-        lane_center = (self.right_line.recent_xfitted[-1][719] + self.left_line.recent_xfitted[-1][719])/2
-    
-        # Offset of car from the lane’s center
-        center_offset_pixels = (camera_position - lane_center)*xm_per_pix
-        self.vehicle_pos.append(center_offset_pixels)
-        self.avg_vehicle_pos = sum(self.vehicle_pos)/len(self.vehicle_pos)
-        return center_offset_pixels
+def get_vehicle_position(self, image):
+
+    # Center col of image gives position of camera (and hence the car).
+    camera_position = image.shape[1]/2
+    xm_per_pix = 3.7/700
+
+    # Center of lane is diff between predicted lane lines at a position closest to the car. 
+    # Image height is 720 pixels so pixel 720 is closet to the car
+    lane_center = (self.right_line.recent_xfitted[-1][719] + self.left_line.recent_xfitted[-1][719])/2
+
+    # Offset of car from the lane’s center
+    center_offset_pixels = (camera_position - lane_center)*xm_per_pix
+    self.vehicle_pos.append(center_offset_pixels)
+    self.avg_vehicle_pos = sum(self.vehicle_pos)/len(self.vehicle_pos)
+    return center_offset_pixels
 ```
 The general idea here is:
+
 1. Assume that the center column of the image represents the camera position and hence that of the vehicle
 2. Take the average of the left and right lane fit lines at the position closest to the car
 3. Subtract the center of the lane from the position of the camera and convert from pixels to meters
 4. Calculate a running average of the vehicle position over a fixed number of frames so it isn't so jittery
 
+I got a consistent negative vehicle offset throughout the duration of the entire vidoe clip. This indicates that the car was driving left of center for the entire duration. I visited the Udacity forums and learned that this is indeed the case! The magnitude of the offset is larger around curves than on straight portions of road which intuitively makes sense because drivers naturally tend to drift to left around curves - at least in the USA where the driver always sits on the left side of the vehicle. 
 
 #### 6. Provide an example image of your result plotted back down onto the road such that the lane area is identified clearly.
 
-I implemented this step in lines # through # in my code in `project.py` in the function `map_lane()`.  Here is an example of my result on a test image:
+The method I used to highlight the lane was:
 
-![alt text][image6]
+1. Take the warped image which already has lane fit lines drawn onto it on frame by frame basis
+2. Break the best fit lines for each lane into 20 segments and save the delineating pixel locations as vertices
+3. Construct a rectangular polygon out of these vertices on its own image
+4. Unwarp the polygon image
+5. Combine the unwarped polygon image with the original image
+6. Do this for every frame
 
----
+The code is in ```project.py``` from lines 402 - 417 (line numbers subject to change!) but is reproduced here:
+
+```python
+# Create a polygon to highlight the ego-lane
+left_vertices = []
+for i in range(0,20):
+    left_vertices.append([int(round(self.left_line.recent_xfitted[-1][i*719//20])),i*719//20])
+
+right_vertices = []
+for i in range(0,20):
+    right_vertices.append([int(round(self.right_line.recent_xfitted[-1][i*719//20])),i*719//20])
+vertices = np.array([left_vertices + right_vertices[::-1]])
+poly_img = np.zeros_like(img)
+poly_img = cv2.flip(poly_img,1)
+cv2.fillPoly(poly_img, [vertices], [0,255, 0])
+
+# Unwarp polygon and project back onto original image
+poly_img = self.transform(poly_img, operation="unwarp")
+img = cv2.addWeighted(img, 1, poly_img, 0.3, 0)
+```
+
+The result is a very smooth green polygon which perfectly follows the lane throughout the entire video clip.
 
 ### Pipeline (video)
 
