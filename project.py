@@ -4,6 +4,7 @@ import matplotlib.pyplot as plt
 import matplotlib.image as mpimg
 import glob
 import collections
+import pickle
 
 def finding_corners(fname):
 
@@ -140,49 +141,6 @@ def corners_unwarp(img, nx, ny, mtx, dist):
 
         # Return the resulting image and matrix
         return warped, M
-
-def calibrate_cameras():
-    print("Calibrating cameras")
-    objpoints = []
-    imgpoints = [] 
-    undistortable = []
-    objp = np.zeros((6*9,3),np.float32)
-    objp[:,:2] = np.mgrid[0:9,0:6].T.reshape(-1,2)
-    images = glob.glob('camera_cal/calibration*.jpg')
-    for image in images:
-        print("Calibrating image", image)
-        img = cv2.imread(image)
-        gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
-        ret, corners = cv2.findChessboardCorners(gray, (9, 6), None)
-        if ret:
-            imgpoints.append(corners)
-            objpoints.append(objp)
-            #undistortable.append(img)
-            #cv2.drawChessboardCorners(img, (8, 6), corners, ret)
-            #plt.imshow(img)
-            #plt.show()
-            
-        # Use cv2.calibrateCamera() and cv2.undistort()
-        # Camera calibration, given object points, image points, and the shape of the grayscale image:
-        ret, mtx, dist, rvecs, tvecs = cv2.calibrateCamera(objpoints, imgpoints, gray.shape[::-1], None, None)
-        # Undistorting a test image:
-        undist = cv2.undistort(img, mtx, dist, None, mtx)
-    
-    
-    #for image in undistortable:
-    #    print("undist")
-    #    plt.imshow(cal_undistort(image, objpoints,imgpoints))
-    #    plt.show()
-    #
-    #images = glob.glob('test_images/*.jpg')
-    #for image in images:
-    #    print("undist")
-    #    img = cv2.imread(image)
-    #    plt.imshow(cal_undistort(img, objpoints,imgpoints))
-    #    plt.show()
-
-
-    return mtx, dist 
 
 # Define a class to receive the characteristics of each line detection
 class Line():
@@ -644,6 +602,49 @@ class MyVideoProcessor(object):
         self.vehicle_pos = collections.deque(maxlen=50)
         self.avg_vehicle_pos = None
 
+    def calibrate_cameras(self):
+        print("Calibrating cameras")
+        objpoints = []
+        imgpoints = [] 
+        undistortable = []
+        objp = np.zeros((6*9,3),np.float32)
+        objp[:,:2] = np.mgrid[0:9,0:6].T.reshape(-1,2)
+        images = glob.glob('camera_cal/calibration*.jpg')
+        for image in images:
+            print("Calibrating image", image)
+            img = cv2.imread(image)
+            gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
+            ret, corners = cv2.findChessboardCorners(gray, (9, 6), None)
+            if ret:
+                imgpoints.append(corners)
+                objpoints.append(objp)
+                #undistortable.append(img)
+                #cv2.drawChessboardCorners(img, (8, 6), corners, ret)
+                #plt.imshow(img)
+                #plt.show()
+                
+            # Use cv2.calibrateCamera() and cv2.undistort()
+            # Camera calibration, given object points, image points, and the shape of the grayscale image:
+            ret, mtx, dist, rvecs, tvecs = cv2.calibrateCamera(objpoints, imgpoints, gray.shape[::-1], None, None)
+            # Undistorting a test image:
+            undist = cv2.undistort(img, mtx, dist, None, mtx)
+        
+        
+        #for image in undistortable:
+        #    print("undist")
+        #    plt.imshow(cal_undistort(image, objpoints,imgpoints))
+        #    plt.show()
+        #
+        #images = glob.glob('test_images/*.jpg')
+        #for image in images:
+        #    print("undist")
+        #    img = cv2.imread(image)
+        #    plt.imshow(cal_undistort(img, objpoints,imgpoints))
+        #    plt.show()
+
+        with open('camera_calibration_pickle.p','wb') as file_pi:
+            pickle.dump((mtx, dist), file_pi)
+
     def get_vehicle_position(self, image):
         
         # Center col of image gives position of camera (and hence the car).
@@ -748,16 +749,17 @@ class MyVideoProcessor(object):
 
 if __name__ == "__main__":
    
-
     vid_processor_obj = MyVideoProcessor()
-
-    #g_mtx, g_dist = calibrate_cameras()
-    g_mtx = np.array([
-             [  1.15396093e+03,   0.00000000e+00,   6.69705357e+02],
-             [  0.00000000e+00,   1.14802496e+03,   3.85656234e+02],
-             [  0.00000000e+00,   0.00000000e+00,   1.00000000e+00]
-            ])
-    g_dist = np.array([[ -2.41017956e-01,  -5.30721173e-02,  -1.15810355e-03,  -1.28318856e-04, 2.67125290e-02]])
+    
+    try:
+        with open('camera_calibration_pickle.p','rb') as file_pi:
+            g_mtx, g_dist = pickle.load(file_pi)
+            print("Loaded camera calibration data!")
+    except:
+        print("Could not find camera calibration data!")
+        vid_processor_obj.calibrate_cameras()
+        with open('camera_calibration_pickle.p','rb') as file_pi:
+            g_mtx, g_dist = pickle.load(file_pi)
 
     print("Camera calibration complete!")
     print("mtx:",str(g_mtx))
@@ -768,6 +770,7 @@ if __name__ == "__main__":
     from IPython.display import HTML
     
     mode = "test" 
+
     if mode == "test":
         clip1 = VideoFileClip("project_video.mp4")
         output_clip = clip1.fl_image(vid_processor_obj.pipeline_function)
