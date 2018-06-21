@@ -15,6 +15,7 @@ class Line():
         # x values of the last n fits of the line
         #self.recent_xfitted = [] 
         self.recent_xfitted = collections.deque(maxlen=10)
+        self.recent_fitted = collections.deque(maxlen=10)
         #average x values of the fitted line over the last n iterations
         self.bestx = None     
         #polynomial coefficients averaged over the last n iterations
@@ -179,7 +180,9 @@ class Line():
         self.ally.append(nonzeroy[line_lane_inds].astype(np.float))
         self.lane_inds.append(line_lane_inds)
         self.recent_xfitted.append(line_fitx)
-        return line_fit, out_img
+        self.recent_fitted.append(line_fit)
+
+        return out_img
     
     def find_lines_in_margin(self, binary_warped, line_fit):
         # Assume you now have a new warped binary image 
@@ -227,12 +230,21 @@ class Line():
         #plt.xlim(0, 1280)
         #plt.ylim(720, 0)
 
-        self.allx = linex
-        self.ally = liney
+        #self.allx = linex
+        #self.ally = liney
 
-        #self.save_current_fit(line_fit, line_fitx)
-        #self.calculate_average_fit()
-        return result
+        ##self.save_current_fit(line_fit, line_fitx)
+        ##self.calculate_average_fit()
+        #return result
+
+        #self.allx = nonzerox[line_lane_inds]
+        #self.ally = nonzeroy[line_lane_inds]
+        self.allx.append(nonzerox[line_lane_inds].astype(np.float))
+        self.ally.append(nonzeroy[line_lane_inds].astype(np.float))
+        self.lane_inds.append(line_lane_inds)
+        self.recent_xfitted.append(line_fitx)
+        self.recent_fitted.append(line_fit)
+        return line_fit, out_img
 
 class MyVideoProcessor(object):
 
@@ -381,20 +393,19 @@ class MyVideoProcessor(object):
         img_binary = self.mask(img)
         img_tx = self.transform(img_binary, operation = "warp")
         
-        #if self.frame_counter <= self.LIMIT:
-        if True:
-            left_fit, img_left = self.left_line.find_lines(img_tx)
-            right_fit, img_right = self.right_line.find_lines(img_tx)
-            #img_left = self.left_line.find_lines(img_tx)
-            #img_right = self.right_line.find_lines(img_tx)
+        # Use sliding windows approach for first frame only
+        if self.frame_counter <= 0:
+            img_left = self.left_line.find_lines(img_tx)
+            img_right = self.right_line.find_lines(img_tx)
+        # After first frame, search within a margin of the previous best fit line
         else:
-            img_left = self.left_line.find_lines_in_margin(img_tx,self.past_frames_left[-1])
-            img_right = self.right_line.find_lines_in_margin(img_tx,self.past_frames_right[-1])
+            img_left = self.left_line.find_lines_in_margin(img_tx,self.left_line.recent_fitted[-1])
+            img_right = self.right_line.find_lines_in_margin(img_tx,self.right_line.recent_fitted[-1])
+        self.frame_counter += 1
 
         self.left_line.calculate_average_fit2()
         self.right_line.calculate_average_fit2()
         img_debug = img_left + img_right
-        self.frame_counter += 1
 
         #self.get_average_fit() 
         
