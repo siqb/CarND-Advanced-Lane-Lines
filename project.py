@@ -352,6 +352,7 @@ class MyVideoProcessor(object):
                       [(w-x)/2.,0.82*h],
                       [(w+x)/2.,0.82*h],
                       [(w+x)/2.,h]])    
+
         # Grab the image shape
         img_size = (img.shape[1], img.shape[0])
         if operation == "warp":
@@ -368,17 +369,12 @@ class MyVideoProcessor(object):
         
         # Center col of image gives position of camera (and hence the car).
         camera_position = image.shape[1]/2
- 
         xm_per_pix = 3.7/700
     
         # Center of lane is diff between predicted lane lines at a position closest to the car. 
         # Image height is 720 pixels so pixel 720 is closet to the car
-        #lane_center = (right_x_predictions[719] + left_x_predictions[719])/2
-        #lane_center = (self.right_line.allx[-1][719] + self.left_line.allx[-1][719])/2
         lane_center = (self.right_line.recent_xfitted[-1][719] + self.left_line.recent_xfitted[-1][719])/2
     
-        print("lane centrer", lane_center)
-        print("camera_position", camera_position)
         # Offset of car from the lane’s center
         center_offset_pixels = (camera_position - lane_center)*xm_per_pix
         self.vehicle_pos.append(center_offset_pixels)
@@ -386,6 +382,7 @@ class MyVideoProcessor(object):
         return center_offset_pixels
 
     def pipeline_function(self, img):
+
         print("#####Entering main pipeline for frame#####")
 
         # Undistort, create binary, and perspective transform image
@@ -407,8 +404,6 @@ class MyVideoProcessor(object):
         self.right_line.calculate_average_fit2()
         img_debug = img_left + img_right
 
-        #self.get_average_fit() 
-        
         # Collect KPIs
         left_curvature = self.left_line.get_curvature(img_tx)
         right_curvature = self.right_line.get_curvature(img_tx)
