@@ -142,6 +142,43 @@ def corners_unwarp(img, nx, ny, mtx, dist):
         # Return the resulting image and matrix
         return warped, M
 
+def create_color_binary(img, s_thresh=(170, 255), sx_thresh=(20, 100)):
+    print("Creating color binary of image")
+    img = np.copy(img)
+
+    # Convert to HLS color space and separate the V channel
+    hls = cv2.cvtColor(img, cv2.COLOR_RGB2HLS).astype(np.float)
+    # L channel (luminosity) will help avoid shadows and portions with dark pixels on the road.
+    l_channel = hls[:,:,1]
+    # S channel (saturation) of HLS will help detect white & yellow lines
+    s_channel = hls[:,:,2]
+    # Thresholding on R & G channels will help detect yellow lanes (yellow is a mix of red and green)
+
+    #R & G channel [200:255] respectively for yellow lanes
+    #S channel [140:255] for white lanes
+    #L channel [140:255] for avoid shadows
+
+    # Sobel x
+    # Good explanation - https://www.tutorialspoint.com/dip/sobel_operator.htm
+    sobelx = cv2.Sobel(l_channel, cv2.CV_64F, 1, 0) # Take the derivative in x
+    abs_sobelx = np.absolute(sobelx) # Absolute x derivative to accentuate lines away from horizontal
+    scaled_sobel = np.uint8(255*abs_sobelx/np.max(abs_sobelx)) # scale sobel output so that irrespective of image format (i.e. jpg, png, etc.), we get the same output.
+        
+    # Threshold x gradient
+    sxbinary = np.zeros_like(scaled_sobel)
+    sxbinary[(scaled_sobel >= sx_thresh[0]) & (scaled_sobel <= sx_thresh[1])] = 1
+        
+    # Threshold color channel
+    s_binary = np.zeros_like(s_channel)
+    s_binary[(s_channel >= s_thresh[0]) & (s_channel <= s_thresh[1])] = 1
+    
+    # Stack each channel
+    # Note color_binary[:, :, 0] is all 0s, effectively an all black image. It might
+    # be beneficial to replace this channel with something else.
+    color_binary = np.dstack((np.zeros_like(sxbinary), sxbinary, s_binary))*255
+    
+    return color_binary
+
 # Define a class to receive the characteristics of each line detection
 class Line():
     def __init__(self, line_side):
@@ -469,43 +506,6 @@ class Line():
         return result
 
 
-
-def create_color_binary(img, s_thresh=(170, 255), sx_thresh=(20, 100)):
-    print("Creating color binary of image")
-    img = np.copy(img)
-
-    # Convert to HLS color space and separate the V channel
-    hls = cv2.cvtColor(img, cv2.COLOR_RGB2HLS).astype(np.float)
-    # L channel (luminosity) will help avoid shadows and portions with dark pixels on the road.
-    l_channel = hls[:,:,1]
-    # S channel (saturation) of HLS will help detect white & yellow lines
-    s_channel = hls[:,:,2]
-    # Thresholding on R & G channels will help detect yellow lanes (yellow is a mix of red and green)
-
-    #R & G channel [200:255] respectively for yellow lanes
-    #S channel [140:255] for white lanes
-    #L channel [140:255] for avoid shadows
-
-    # Sobel x
-    # Good explanation - https://www.tutorialspoint.com/dip/sobel_operator.htm
-    sobelx = cv2.Sobel(l_channel, cv2.CV_64F, 1, 0) # Take the derivative in x
-    abs_sobelx = np.absolute(sobelx) # Absolute x derivative to accentuate lines away from horizontal
-    scaled_sobel = np.uint8(255*abs_sobelx/np.max(abs_sobelx)) # scale sobel output so that irrespective of image format (i.e. jpg, png, etc.), we get the same output.
-        
-    # Threshold x gradient
-    sxbinary = np.zeros_like(scaled_sobel)
-    sxbinary[(scaled_sobel >= sx_thresh[0]) & (scaled_sobel <= sx_thresh[1])] = 1
-        
-    # Threshold color channel
-    s_binary = np.zeros_like(s_channel)
-    s_binary[(s_channel >= s_thresh[0]) & (s_channel <= s_thresh[1])] = 1
-    
-    # Stack each channel
-    # Note color_binary[:, :, 0] is all 0s, effectively an all black image. It might
-    # be beneficial to replace this channel with something else.
-    color_binary = np.dstack((np.zeros_like(sxbinary), sxbinary, s_binary))*255
-    
-    return color_binary
 
 class MyVideoProcessor(object):
 
