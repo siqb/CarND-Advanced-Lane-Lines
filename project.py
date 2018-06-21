@@ -5,11 +5,14 @@ import matplotlib.image as mpimg
 import glob
 import collections
 
-
-"""
-Finding corners
-"""
 def finding_corners(fname):
+
+    """
+    
+    Finding corners
+    
+    """
+
     # prepare object points
     nx = 8#TODO: enter the number of inside corners in x
     ny = 6#TODO: enter the number of inside corners in y
@@ -31,10 +34,14 @@ def finding_corners(fname):
         plt.imshow(img)
     return ret, corners
 
-"""
-Correcting for distortion
-"""
 def cal_undistort(img, objpoints, imgpoints):
+
+    """
+    
+    Correcting for distortion
+    
+    """
+
     print("Undistorting image")
     # Use cv2.calibrateCamera() and cv2.undistort()
     # Camera calibration, given object points, image points, and the shape of the grayscale image:
@@ -52,46 +59,55 @@ def undistort(img, mtx, dist):
     undist = cv2.undistort(img, mtx, dist, None, mtx)
     return undist
 
-#"""
-#Applying sobel
-#"""
-#
-# # Define a function that takes an image, gradient orientation,
-# # and threshold min / max values.
-#def abs_sobel_thresh(img, orient='x', thresh_min=0, thresh_max=255):
-#     # Convert to grayscale
-#     gray = cv2.cvtColor(img, cv2.COLOR_RGB2GRAY)
-#     # Apply x or y gradient with the OpenCV Sobel() function
-#     # and take the absolute value
-#     if orient == 'x':
-#         abs_sobel = np.absolute(cv2.Sobel(gray, cv2.CV_64F, 1, 0))
-#     if orient == 'y':
-#         abs_sobel = np.absolute(cv2.Sobel(gray, cv2.CV_64F, 0, 1))
-#     # Rescale back to 8 bit integer
-#     scaled_sobel = np.uint8(255*abs_sobel/np.max(abs_sobel))
-#     # Create a copy and apply the threshold
-#     binary_output = np.zeros_like(scaled_sobel)
-#     # Here I'm using inclusive (>=, <=) thresholds, but exclusive is ok too
-#     binary_output[(scaled_sobel >= thresh_min) & (scaled_sobel <= thresh_max)] = 1
-#
-#     # Return the result
-#     return binary_output
-#
-## Define a function that thresholds the S-channel of HLS
-#def hls_select(img, thresh=(0, 255)):
-#    hls = cv2.cvtColor(img, cv2.COLOR_RGB2HLS)
-#    s_channel = hls[:,:,2]
-#    binary_output = np.zeros_like(s_channel)
-#    binary_output[(s_channel > thresh[0]) & (s_channel <= thresh[1])] = 1
-#    return binary_output
+
+ # Define a function that takes an image, gradient orientation,
+ # and threshold min / max values.
+def abs_sobel_thresh(img, orient='x', thresh_min=0, thresh_max=255):
+
+    """
+    
+    Applying sobel
+    
+    """
+
+    # Convert to grayscale
+    gray = cv2.cvtColor(img, cv2.COLOR_RGB2GRAY)
+    # Apply x or y gradient with the OpenCV Sobel() function
+    # and take the absolute value
+    if orient == 'x':
+        abs_sobel = np.absolute(cv2.Sobel(gray, cv2.CV_64F, 1, 0))
+    if orient == 'y':
+        abs_sobel = np.absolute(cv2.Sobel(gray, cv2.CV_64F, 0, 1))
+    # Rescale back to 8 bit integer
+    scaled_sobel = np.uint8(255*abs_sobel/np.max(abs_sobel))
+    # Create a copy and apply the threshold
+    binary_output = np.zeros_like(scaled_sobel)
+    # Here I'm using inclusive (>=, <=) thresholds, but exclusive is ok too
+    binary_output[(scaled_sobel >= thresh_min) & (scaled_sobel <= thresh_max)] = 1
+
+    # Return the result
+    return binary_output
+
+# Define a function that thresholds the S-channel of HLS
+def hls_select(img, thresh=(0, 255)):
+    hls = cv2.cvtColor(img, cv2.COLOR_RGB2HLS)
+    s_channel = hls[:,:,2]
+    binary_output = np.zeros_like(s_channel)
+    binary_output[(s_channel > thresh[0]) & (s_channel <= thresh[1])] = 1
+    return binary_output
 
 
-"""
-Undistort and transform
-"""
-# Define a function that takes an image, number of x and y points, 
-# camera matrix and distortion coefficients
 def corners_unwarp(img, nx, ny, mtx, dist):
+
+    """
+    
+    Undistort and transform
+    
+    Define a function that takes an image, number of x and y points, 
+    camera matrix and distortion coefficients
+    
+    """
+
     # Use the OpenCV undistort() function to remove distortion
     undist = cv2.undistort(img, mtx, dist, None, mtx)
     # Convert undistorted image to grayscale
@@ -388,11 +404,11 @@ class Line():
         left_fit = np.polyfit(lefty, leftx, 2)
         #right_fit = np.polyfit(righty, rightx, 2)
     
-    
-    
-        #
-        # VISUALIZATIONS
-        #
+        """ 
+        
+        VISUALIZATIONS
+        
+        """
     
     
         # Generate x and y values for plotting
@@ -657,12 +673,8 @@ class MyVideoProcessor(object):
         
         #if self.frame_counter <= self.LIMIT:
         if True:
-            #left_fit, right_fit, img = line.find_lines(img_tx)
-
             left_fit, img_left = self.left_line.find_lines(img_tx)
             right_fit, img_right = self.right_line.find_lines(img_tx)
-            #self.past_frames_left.append(left_fit)
-            #self.past_frames_right.append(right_fit)
             #img_left = self.left_line.find_lines(img_tx)
             #img_right = self.right_line.find_lines(img_tx)
         else:
@@ -730,7 +742,6 @@ class MyVideoProcessor(object):
     
         offset_text = "Offset = " + str(round(vehicle_pos,2)) + "m"
         cv2.putText(img, offset_text, (100,200), cv2.FONT_HERSHEY_SIMPLEX,1.0,(255,255,255),lineType=cv2.LINE_AA)
-    
 
         print("#####Done processing frame#####")
         return img
@@ -758,7 +769,6 @@ if __name__ == "__main__":
     
     mode = "test" 
     if mode == "test":
-        #clip1 = VideoFileClip("project_video.mp4").subclip(0,10)
         clip1 = VideoFileClip("project_video.mp4")
         output_clip = clip1.fl_image(vid_processor_obj.pipeline_function)
         output_clip.preview()
