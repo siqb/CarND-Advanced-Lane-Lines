@@ -379,7 +379,7 @@ class MyVideoProcessor(object):
         # Undistort, create binary, and perspective transform image
         img = self.undistort(img, g_mtx, g_dist)
         img_binary = self.mask(img)
-        img_tx = self.transform(img_binary)
+        img_tx = self.transform(img_binary, operation = "warp")
         
         #if self.frame_counter <= self.LIMIT:
         if True:
