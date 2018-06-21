@@ -515,34 +515,6 @@ def unwarp(img):
     #warped = cv2.warpPerspective(img, M, img_size, flags=cv2.INTER_LINEAR)
     return unwarped
 
-def mask(img):
-    #Thresholds
-    yellow_lower_filter = np.array([0, 100, 100])
-    yellow_upper_filter = np.array([80, 255, 255])
-
-    white_lower_filter = np.array([200, 200, 200])
-    white_upper_filter = np.array([255, 255, 255])
-
-    #yellow masking
-    hsv = cv2.cvtColor(img, cv2.COLOR_RGB2HSV)
-    yellow_mask = cv2.inRange(hsv, yellow_lower_filter, yellow_upper_filter)
-    yellow_mask = cv2.bitwise_and(img, img, mask=yellow_mask)
-
-    #white masking
-    rgb = img
-    white_mask = cv2.inRange(rgb, white_lower_filter, white_upper_filter)
-    white_mask = cv2.bitwise_and(img, img, mask=white_mask)
-
-    #combined masks
-    combined_mask = cv2.addWeighted(white_mask, 1., yellow_mask, 1., 0.)
-
-    #convert to binary image
-    # Just convert to grayscale and then set a threshold for anything greater then 0 for that gray 
-    gray_mask = cv2.cvtColor(combined_mask, cv2.COLOR_RGB2GRAY)
-    binary = np.zeros_like(gray_mask)
-    binary[(gray_mask > 0)] = 1
-    return binary
-
 
 def create_color_binary(img, s_thresh=(170, 255), sx_thresh=(20, 100)):
     print("Creating color binary of image")
@@ -645,6 +617,34 @@ class MyVideoProcessor(object):
         with open('camera_calibration_pickle.p','wb') as file_pi:
             pickle.dump((mtx, dist), file_pi)
 
+    def mask(self,img):
+        #Thresholds
+        yellow_lower_filter = np.array([0, 100, 100])
+        yellow_upper_filter = np.array([80, 255, 255])
+    
+        white_lower_filter = np.array([200, 200, 200])
+        white_upper_filter = np.array([255, 255, 255])
+    
+        #yellow masking
+        hsv = cv2.cvtColor(img, cv2.COLOR_RGB2HSV)
+        yellow_mask = cv2.inRange(hsv, yellow_lower_filter, yellow_upper_filter)
+        yellow_mask = cv2.bitwise_and(img, img, mask=yellow_mask)
+    
+        #white masking
+        rgb = img
+        white_mask = cv2.inRange(rgb, white_lower_filter, white_upper_filter)
+        white_mask = cv2.bitwise_and(img, img, mask=white_mask)
+    
+        #combined masks
+        combined_mask = cv2.addWeighted(white_mask, 1., yellow_mask, 1., 0.)
+    
+        #convert to binary image
+        # Just convert to grayscale and then set a threshold for anything greater then 0 for that gray 
+        gray_mask = cv2.cvtColor(combined_mask, cv2.COLOR_RGB2GRAY)
+        binary = np.zeros_like(gray_mask)
+        binary[(gray_mask > 0)] = 1
+        return binary
+
     def get_vehicle_position(self, image):
         
         # Center col of image gives position of camera (and hence the car).
@@ -669,7 +669,7 @@ class MyVideoProcessor(object):
     def pipeline_function(self, img):
         print("#####Entering main pipeline for frame#####")
         img = undistort(img, g_mtx, g_dist)
-        img_binary = mask(img)
+        img_binary = self.mask(img)
         img_tx = transform(img_binary)
         
         #if self.frame_counter <= self.LIMIT:
