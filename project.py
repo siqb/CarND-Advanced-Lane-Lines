@@ -668,6 +668,8 @@ class MyVideoProcessor(object):
 
     def pipeline_function(self, img):
         print("#####Entering main pipeline for frame#####")
+
+        # Undistort, create binary, and perspective transform image
         img = self.undistort(img, g_mtx, g_dist)
         img_binary = self.mask(img)
         img_tx = self.transform(img_binary)
@@ -679,30 +681,22 @@ class MyVideoProcessor(object):
             #img_left = self.left_line.find_lines(img_tx)
             #img_right = self.right_line.find_lines(img_tx)
         else:
-            #img = line.find_lines_in_margin(img_tx,self.past_frames_left[-1],self.past_frames_right[-1])
             img_left = self.left_line.find_lines_in_margin(img_tx,self.past_frames_left[-1])
             img_right = self.right_line.find_lines_in_margin(img_tx,self.past_frames_right[-1])
 
         self.left_line.calculate_average_fit2()
         self.right_line.calculate_average_fit2()
-
         img_debug = img_left + img_right
         self.frame_counter += 1
 
         #self.get_average_fit() 
         
-        #left_curvature, right_curvature = get_curvature(img_tx, left_lane_inds, right_lane_inds)
+        # Collect KPIs
         left_curvature = self.left_line.get_curvature(img_tx)
         right_curvature = self.right_line.get_curvature(img_tx)
-
         vehicle_pos = self.get_vehicle_position(img_tx)
-
-
-        #top_left = [0, int(round(self.left_line.recent_xfitted[-1][0]))]
-        #bottom_left = [719, int(round(self.left_line.recent_xfitted[-1][719]))]
-        #top_right = [0, int(round(self.right_line.recent_xfitted[-1][0]))]
-        #bottom_right = [719, int(round(self.right_line.recent_xfitted[-1][719]))]
-
+        
+        # Create a polygon to highlight the ego-lane
         left_vertices = []
         for i in range(0,20):
             left_vertices.append([int(round(self.left_line.recent_xfitted[-1][i*719//20])),i*719//20])
@@ -710,39 +704,30 @@ class MyVideoProcessor(object):
         right_vertices = []
         for i in range(0,20):
             right_vertices.append([int(round(self.right_line.recent_xfitted[-1][i*719//20])),i*719//20])
-
         vertices = np.array([left_vertices + right_vertices[::-1]])
-            
-        #top_left = [int(round(self.left_line.recent_xfitted[-1][0])),0]
-        #middle_left = [int(round(self.left_line.recent_xfitted[-1][0])),719//2]
-        #bottom_left = [int(round(self.left_line.recent_xfitted[-1][719])),719]
-
-        #top_right = [int(round(self.right_line.recent_xfitted[-1][0])),0]
-        #middle_right = [int(round(self.right_line.recent_xfitted[-1][0])),719//2]
-        #bottom_right = [int(round(self.right_line.recent_xfitted[-1][719])),719]
-        
-        #vertices = np.array([[top_left, top_right, middle_right, bottom_right, bottom_left, middle_left]])
-
         poly_img = np.zeros_like(img)
         poly_img = cv2.flip(poly_img,1)
-
         cv2.fillPoly(poly_img, [vertices], [0,255, 0])
         
-        #top_left = (0, int(round(self.left_line.recent_xfitted[-1][0])))
-        #bottom_right = (719, int(round(self.right_line.recent_xfitted[-1][719])))
-        #cv2.rectangle(img,top_left,bottom_right,(0,255,0), 2)
-
-
+        # Unwarp polygon and project back onto original image
         poly_img = self.unwarp(poly_img)
         img = cv2.addWeighted(img, 1, poly_img, 0.3, 0)
         
+        # Print KPIs on screen
         left_curve_text = "Left Curvature = " + str(round(left_curvature,2)) + "m"
-        cv2.putText(img, left_curve_text, (100,100), cv2.FONT_HERSHEY_SIMPLEX,1.0,(255,255,255),lineType=cv2.LINE_AA)
+        cv2.putText(img, left_curve_text, (100,100), 
+                    cv2.FONT_HERSHEY_SIMPLEX,
+                    1.0,(255,255,255),
+                    lineType=cv2.LINE_AA)
         right_curve_text = "Right Curvature = " + str(round(right_curvature,2)) + "m"
-        cv2.putText(img, right_curve_text, (100,150), cv2.FONT_HERSHEY_SIMPLEX,1.0,(255,255,255),lineType=cv2.LINE_AA)
-    
+        cv2.putText(img, right_curve_text, (100,150), 
+                    cv2.FONT_HERSHEY_SIMPLEX,
+                    1.0,(255,255,255),
+                    lineType=cv2.LINE_AA)
         offset_text = "Offset = " + str(round(vehicle_pos,2)) + "m"
-        cv2.putText(img, offset_text, (100,200), cv2.FONT_HERSHEY_SIMPLEX,1.0,(255,255,255),lineType=cv2.LINE_AA)
+        cv2.putText(img, offset_text, (100,200), 
+                    cv2.FONT_HERSHEY_SIMPLEX,
+                    1.0,(255,255,255),lineType=cv2.LINE_AA)
 
         print("#####Done processing frame#####")
         return img
