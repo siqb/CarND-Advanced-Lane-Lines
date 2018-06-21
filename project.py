@@ -33,32 +33,10 @@ class Line():
         self.allx = None  
         #y values for detected line pixels
         self.ally = None
-        self.N_SAMPLES = 10
 
         self.lane_inds = collections.deque(maxlen=30)
         self.avg_lane_inds = None
         self.avg_curvature = None
-
-    def calculate_average_fit(self):
-        # Average fit of left line
-        sum_fits = np.zeros_like(self.recent_xfitted[-1])
-        for fit in self.recent_xfitted:
-            sum_fits += fit
-        self.bestx = sum_left_fits/float(len(self.recent_xfitted))
-
-    def calculate_average_fit2(self):
-        # Average fit of left line
-        #print("lane inds", self.lane_inds)
-        #print("sum lane inds", sum(self.lane_inds))
-        #self.avg_lane_inds = sum(self.lane_inds)//len(self.lane_inds)
-
-    
-    def save_current_fit(self,fit,fitx):
-        self.current_fit = fit
-        if len(self.recent_xfitted) < self.N_SAMPLES: 
-            self.recent_xfitted.append(fit)
-        else:
-            self.recent_xfitted = [fit]
 
     def get_curvature(self, img):
         # Define conversions in x and y from pixels space to meters
@@ -219,11 +197,6 @@ class Line():
         #plt.plot(line_fitx, ploty, color='yellow')
         #plt.xlim(0, 1280)
         #plt.ylim(720, 0)
-
-
-        ##self.save_current_fit(line_fit, line_fitx)
-        ##self.calculate_average_fit()
-        #return result
 
         self.lane_inds.append(line_lane_inds)
         self.recent_xfitted.append(line_fitx)
