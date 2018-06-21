@@ -211,8 +211,6 @@ class Line():
         #self.avg_ally = collections.deque(maxlen=10)
         self.avg_allx = None 
         self.avg_ally = None 
-
-
         self.avg_curvature = None
 
     def calculate_average_fit(self):
@@ -233,9 +231,7 @@ class Line():
 
     
     def save_current_fit(self,fit,fitx):
-
         self.current_fit = fit
-
         if len(self.recent_xfitted) < self.N_SAMPLES: 
             self.recent_xfitted.append(fit)
         else:
@@ -277,14 +273,13 @@ class Line():
         histogram = np.sum(binary_warped[binary_warped.shape[0]//2:,:], axis=0)
         # Create an output image to draw on and  visualize the result
         out_img = np.dstack((binary_warped, binary_warped, binary_warped))*255
-        # Find the peak of the left and right halves of the histogram
-        # These will be the starting point for the left and right lines
+        # Find the peak of the line and right halves of the histogram
+        # These will be the starting point for the lane lines
         midpoint = np.int(histogram.shape[0]//2)
         if self.line_side == "left":
-            leftx_base = np.argmax(histogram[:midpoint])
+            linex_base = np.argmax(histogram[:midpoint])
         elif self.line_side == "right":
-            leftx_base = np.argmax(histogram[midpoint:]) + midpoint
-            #rightx_base = np.argmax(histogram[midpoint:]) + midpoint
+            linex_base = np.argmax(histogram[midpoint:]) + midpoint
         
         # Choose the number of sliding windows
         nwindows = 9
@@ -295,99 +290,64 @@ class Line():
         nonzeroy = np.array(nonzero[0])
         nonzerox = np.array(nonzero[1])
         # Current positions to be updated for each window
-        leftx_current = leftx_base
-        #rightx_current = rightx_base
+        linex_current = linex_base
         # Set the width of the windows +/- margin
         margin = 100
         # Set minimum number of pixels found to recenter window
         minpix = 50
-        # Create empty lists to receive left and right lane pixel indices
-        left_lane_inds = []
-        #right_lane_inds = []
+        # Create empty lists to receive lane pixel indices
+        line_lane_inds = []
         
         # Step through the windows one by one
         for window in range(nwindows):
-            # Identify window boundaries in x and y (and right and left)
+            # Identify window boundaries in x and y
             win_y_low = binary_warped.shape[0] - (window+1)*window_height
             win_y_high = binary_warped.shape[0] - window*window_height
-            win_xleft_low = leftx_current - margin
-            win_xleft_high = leftx_current + margin
-            #win_xright_low = rightx_current - margin
-            #win_xright_high = rightx_current + margin
+            win_xline_low = linex_current - margin
+            win_xline_high = linex_current + margin
             # Draw the windows on the visualization image
-            cv2.rectangle(out_img,(win_xleft_low,win_y_low),(win_xleft_high,win_y_high),
+            cv2.rectangle(out_img,(win_xline_low,win_y_low),(win_xline_high,win_y_high),
             (0,255,0), 2) 
-            #cv2.rectangle(out_img,(win_xright_low,win_y_low),(win_xright_high,win_y_high),
-            #(0,255,0), 2) 
             # Identify the nonzero pixels in x and y within the window
-            good_left_inds = ((nonzeroy >= win_y_low) & (nonzeroy < win_y_high) & 
-            (nonzerox >= win_xleft_low) &  (nonzerox < win_xleft_high)).nonzero()[0]
-            #good_right_inds = ((nonzeroy >= win_y_low) & (nonzeroy < win_y_high) & 
-            #(nonzerox >= win_xright_low) &  (nonzerox < win_xright_high)).nonzero()[0]
+            good_line_inds = ((nonzeroy >= win_y_low) & (nonzeroy < win_y_high) & 
+            (nonzerox >= win_xline_low) &  (nonzerox < win_xline_high)).nonzero()[0]
             # Append these indices to the lists
-            left_lane_inds.append(good_left_inds)
-            #right_lane_inds.append(good_right_inds)
+            line_lane_inds.append(good_line_inds)
             # If you found > minpix pixels, recenter next window on their mean position
-            if len(good_left_inds) > minpix:
-                leftx_current = np.int(np.mean(nonzerox[good_left_inds]))
-            #if len(good_right_inds) > minpix:        
-            #    rightx_current = np.int(np.mean(nonzerox[good_right_inds]))
+            if len(good_line_inds) > minpix:
+                linex_current = np.int(np.mean(nonzerox[good_line_inds]))
         
         # Concatenate the arrays of indices
-        left_lane_inds = np.concatenate(left_lane_inds)
-        #right_lane_inds = np.concatenate(right_lane_inds)
+        line_lane_inds = np.concatenate(line_lane_inds)
         
-        # Extract left and right line pixel positions
-        leftx = nonzerox[left_lane_inds]
-
-        print("your leftx", leftx)
-
-
-        lefty = nonzeroy[left_lane_inds] 
-        #rightx = nonzerox[right_lane_inds]
-        #righty = nonzeroy[right_lane_inds] 
+        # Extract line pixel positions
+        linex = nonzerox[line_lane_inds]
+        liney = nonzeroy[line_lane_inds] 
         
         # Fit a second order polynomial to each
-        left_fit = np.polyfit(lefty, leftx, 2)
-        #right_fit = np.polyfit(righty, rightx, 2)
-    
-        """ 
-        
-        VISUALIZATIONS
-        
-        """
-    
+        line_fit = np.polyfit(liney, linex, 2)
     
         # Generate x and y values for plotting
-        # numpy.linspace(start, stop, num = 50, endpoint = True, retstep = False, dtype = None)
         ploty = np.linspace(0, binary_warped.shape[0]-1, binary_warped.shape[0] )
-        left_fitx = left_fit[0]*ploty**2 + left_fit[1]*ploty + left_fit[2]
-        #right_fitx = right_fit[0]*ploty**2 + right_fit[1]*ploty + right_fit[2]
+        line_fitx = line_fit[0]*ploty**2 + line_fit[1]*ploty + line_fit[2]
         
-        out_img[nonzeroy[left_lane_inds], nonzerox[left_lane_inds]] = [255, 0, 0]
-        #out_img[nonzeroy[right_lane_inds], nonzerox[right_lane_inds]] = [0, 0, 255]
+        out_img[nonzeroy[line_lane_inds], nonzerox[line_lane_inds]] = [255, 0, 0]
 
         # Draw the fit lines
         for i in range(0,720):
-            out_img[i][int(round(left_fitx[i]))]=[100,100,100]
+            out_img[i][int(round(line_fitx[i]))]=[100,100,100]
         #plt.imshow(out_img)
-        #plt.plot(left_fitx, ploty, color='yellow')
-        #plt.plot(right_fitx, ploty, color='yellow')
+        #plt.plot(line_fitx, ploty, color='yellow')
         #plt.xlim(0, 1280)
         #plt.ylim(720, 0)
     
-        #self.allx = nonzerox[left_lane_inds]
-        #self.ally = nonzeroy[left_lane_inds]
-
-        self.allx.append(nonzerox[left_lane_inds].astype(np.float))
-        self.ally.append(nonzeroy[left_lane_inds].astype(np.float))
-
-        self.lane_inds.append(left_lane_inds)
-
-        self.recent_xfitted.append(left_fitx)
-        #return left_fit, right_fit, out_img
-
-        return left_fit, out_img
+        #self.allx = nonzerox[line_lane_inds]
+        #self.ally = nonzeroy[line_lane_inds]
+        self.allx.append(nonzerox[line_lane_inds].astype(np.float))
+        self.ally.append(nonzeroy[line_lane_inds].astype(np.float))
+        self.lane_inds.append(line_lane_inds)
+        self.recent_xfitted.append(line_fitx)
+        return line_fit, out_img
     
     #def find_lines_in_margin(self, binary_warped, left_fit, right_fit):
     def find_lines_in_margin(self, binary_warped, left_fit):
@@ -454,10 +414,7 @@ class Line():
 
         #self.save_current_fit(left_fit, left_fitx)
         #self.calculate_average_fit()
-        
         return result
-
-
 
 class MyVideoProcessor(object):
 
