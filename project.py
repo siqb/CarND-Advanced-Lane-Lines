@@ -55,11 +55,6 @@ def cal_undistort(img, objpoints, imgpoints):
     #plt.imshow(undist)
     return undist
 
-def undistort(img, mtx, dist):
-    # Undistorting a test image:
-    undist = cv2.undistort(img, mtx, dist, None, mtx)
-    return undist
-
 
  # Define a function that takes an image, gradient orientation,
  # and threshold min / max values.
@@ -571,6 +566,11 @@ class MyVideoProcessor(object):
         with open('camera_calibration_pickle.p','wb') as file_pi:
             pickle.dump((mtx, dist), file_pi)
 
+    def undistort(self, img, mtx, dist):
+        # Undistorting a test image:
+        undist = cv2.undistort(img, mtx, dist, None, mtx)
+        return undist
+
     def mask(self,img):
         #Thresholds
         yellow_lower_filter = np.array([0, 100, 100])
@@ -668,7 +668,7 @@ class MyVideoProcessor(object):
 
     def pipeline_function(self, img):
         print("#####Entering main pipeline for frame#####")
-        img = undistort(img, g_mtx, g_dist)
+        img = self.undistort(img, g_mtx, g_dist)
         img_binary = self.mask(img)
         img_tx = self.transform(img_binary)
         
