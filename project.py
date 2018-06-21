@@ -9,9 +9,11 @@ import pickle
 def finding_corners(fname):
 
     """
-    
+
     Finding corners
     
+    UNUSED FUNCTION
+
     """
 
     # prepare object points
@@ -41,6 +43,8 @@ def cal_undistort(img, objpoints, imgpoints):
     
     Correcting for distortion
     
+    UNUSED FUNCTION
+
     """
 
     print("Undistorting image")
@@ -56,14 +60,17 @@ def cal_undistort(img, objpoints, imgpoints):
     return undist
 
 
- # Define a function that takes an image, gradient orientation,
- # and threshold min / max values.
 def abs_sobel_thresh(img, orient='x', thresh_min=0, thresh_max=255):
 
     """
     
     Applying sobel
+
+    Define a function that takes an image, gradient orientation,
+    and threshold min / max values.
     
+    UNUSED FUNCTION
+
     """
 
     # Convert to grayscale
@@ -84,14 +91,23 @@ def abs_sobel_thresh(img, orient='x', thresh_min=0, thresh_max=255):
     # Return the result
     return binary_output
 
-# Define a function that thresholds the S-channel of HLS
 def hls_select(img, thresh=(0, 255)):
+
+    """
+    
+    Select S-channel
+    
+    Define a function that thresholds the S-channel of HLS
+    
+    UNUSED FUNCTION
+
+    """
+
     hls = cv2.cvtColor(img, cv2.COLOR_RGB2HLS)
     s_channel = hls[:,:,2]
     binary_output = np.zeros_like(s_channel)
     binary_output[(s_channel > thresh[0]) & (s_channel <= thresh[1])] = 1
     return binary_output
-
 
 def corners_unwarp(img, nx, ny, mtx, dist):
 
@@ -101,6 +117,8 @@ def corners_unwarp(img, nx, ny, mtx, dist):
     
     Define a function that takes an image, number of x and y points, 
     camera matrix and distortion coefficients
+    
+    UNUSED FUNCTION
     
     """
 
@@ -138,6 +156,15 @@ def corners_unwarp(img, nx, ny, mtx, dist):
         return warped, M
 
 def create_color_binary(img, s_thresh=(170, 255), sx_thresh=(20, 100)):
+
+    """
+    
+    Color binary
+
+    UNUSED FUNCTION
+    
+    """
+    
     print("Creating color binary of image")
     img = np.copy(img)
 
@@ -171,7 +198,6 @@ def create_color_binary(img, s_thresh=(170, 255), sx_thresh=(20, 100)):
     # Note color_binary[:, :, 0] is all 0s, effectively an all black image. It might
     # be beneficial to replace this channel with something else.
     color_binary = np.dstack((np.zeros_like(sxbinary), sxbinary, s_binary))*255
-    
     return color_binary
 
 # Define a class to receive the characteristics of each line detection
@@ -418,8 +444,6 @@ class MyVideoProcessor(object):
         # Misc global variables
         self.frame_counter = 0
         self.LIMIT = 60
-
-
         self.vehicle_pos = collections.deque(maxlen=50)
         self.avg_vehicle_pos = None
 
@@ -449,7 +473,6 @@ class MyVideoProcessor(object):
             ret, mtx, dist, rvecs, tvecs = cv2.calibrateCamera(objpoints, imgpoints, gray.shape[::-1], None, None)
             # Undistorting a test image:
             undist = cv2.undistort(img, mtx, dist, None, mtx)
-        
         
         #for image in undistortable:
         #    print("undist")
