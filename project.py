@@ -522,7 +522,7 @@ class MyVideoProcessor(object):
         binary[(gray_mask > 0)] = 1
         return binary
 
-    def transform(self,img):
+    def transform(self,img,operation):
         print("Perfoming perspective transform on image")
         w,h = 1280,720
         x,y = 0.5*w, 0.8*h
@@ -534,39 +534,17 @@ class MyVideoProcessor(object):
                       [(w-x)/2.,0.82*h],
                       [(w+x)/2.,0.82*h],
                       [(w+x)/2.,h]])    
-        
         # Grab the image shape
         img_size = (img.shape[1], img.shape[0])
-        M = cv2.getPerspectiveTransform(src, dst)
-        #Compute the inverse perspective transform:
-        M_inv = cv2.getPerspectiveTransform(dst, src)
-        #Warp an image using the perspective transform, M:
-        warped = cv2.warpPerspective(img, M, img_size)
-        #warped = cv2.warpPerspective(img, M, img_size, flags=cv2.INTER_LINEAR)
-        return warped
-
-    def unwarp(self,img):
-        print("Perfoming perspective transform on image")
-        w,h = 1280,720
-        x,y = 0.5*w, 0.8*h
-        src = np.float32([[200./1280*w,720./720*h],
-                      [453./1280*w,547./720*h],
-                      [835./1280*w,547./720*h],
-                      [1100./1280*w,720./720*h]])
-        dst = np.float32([[(w-x)/2.,h],
-                      [(w-x)/2.,0.82*h],
-                      [(w+x)/2.,0.82*h],
-                      [(w+x)/2.,h]])    
-        
-        # Grab the image shape
-        img_size = (img.shape[1], img.shape[0])
-        M = cv2.getPerspectiveTransform(src, dst)
-        #Compute the inverse perspective transform:
-        M_inv = cv2.getPerspectiveTransform(dst, src)
-        #Warp an image using the perspective transform, M:
-        unwarped = cv2.warpPerspective(img, M_inv, img_size)
-        #warped = cv2.warpPerspective(img, M, img_size, flags=cv2.INTER_LINEAR)
-        return unwarped
+        if operation == "warp":
+            M = cv2.getPerspectiveTransform(src, dst)
+            transformed = cv2.warpPerspective(img, M, img_size)
+        elif operation == "unwarp":
+            #Compute the inverse perspective transform:
+            M_inv = cv2.getPerspectiveTransform(dst, src)
+            #Warp an image using the perspective transform, M:
+            transformed = cv2.warpPerspective(img, M_inv, img_size)
+        return transformed 
 
     def get_vehicle_position(self, image):
         
