@@ -32,6 +32,8 @@ The goals / steps of this project are the following:
 [image13]: ./pics/polygon.png "Warped Polygon"
 [image14]: ./pics/polygon_unwarped.png "Unwarped Polygon"
 [image15]: ./pics/final_image.png "Final Output"
+[image16]: ./pics/launch.png "MoviePy"
+
 
 ## How to Use
 
@@ -45,11 +47,7 @@ After this, simply execute the file:
 
 A MoviePy window should pop up which looks like this:
 
-[image7]: ./pics/launch.png "MoviePy"
-
-## [Rubric](https://review.udacity.com/#!/rubrics/571/view) Points
-
-### Here I will consider the rubric points individually and describe how I addressed each point in my implementation.  
+![alt text][image16]
 
 ---
 
@@ -338,7 +336,7 @@ The result is a very smooth green polygon which perfectly highlights the ego-lan
 
 #### 1. Provide a link to your final video output.  Your pipeline should perform reasonably well on the entire project video (wobbly lines are ok but no catastrophic failures that would cause the car to drive off the road!).
 
-Here's a [link to my video result](./project_video.mp4)
+Here's a [link to my video result](./output.mp4)
 
 ---
 
