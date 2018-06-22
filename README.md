@@ -69,17 +69,23 @@ I then used the output `objpoints` and `imgpoints` to compute the camera calibra
 
 #### 1. Provide an example of a distortion-corrected image.
 
-To demonstrate this step, I will describe how I apply the distortion correction to one of the test images like this one:
-![alt text][image2]
+The code I used to undistort images is very simple:
 
 ```python
-    def undistort(self, img, mtx, dist):
-        # Undistorting a test image:
-        undist = cv2.undistort(img, mtx, dist, None, mtx)
-        return undist
+def undistort(self, img, mtx, dist):
+    # Undistorting a test image:
+    undist = cv2.undistort(img, mtx, dist, None, mtx)
+    return undist
 ```
+Here is an unprocessed **distorted** image straight from the video:
 
+![alt text][image7]
 
+Here is the same image in **undistored** form:
+
+![alt text][image8]
+
+Can you tell the difference? It is very subtle but it is there!
 
 #### 2. Describe how (and identify where in your code) you used color transforms, gradients or other methods to create a thresholded binary image.  Provide an example of a binary image result.
 
@@ -124,11 +130,9 @@ def mask(self,img):
     binary[(gray_mask > 0)] = 1
     return binary
 ```
+Here's an example of my output for this step.  
 
-
-Here's an example of my output for this step.  (note: this is not actually from one of the test images)
-
-![alt text][image3]
+![alt text][image9]
 
 #### 3. Describe how (and identify where in your code) you performed a perspective transform and provide an example of a transformed image.
 
@@ -170,7 +174,9 @@ This resulted in the following source and destination points:
 
 I verified that my perspective transform was working as expected by drawing the `src` and `dst` points onto a test image and its warped counterpart to verify that the lines appear parallel in the warped image.
 
-![alt text][image4]
+Here is an example of a warped binary image from my pipeline:
+
+![alt text][image10]
 
 #### 4. Describe how (and identify where in your code) you identified lane-line pixels and fit their positions with a polynomial?
 
@@ -204,7 +210,13 @@ self.frame_counter += 1
 ```
 I will not reproduce the code for ```find_lines``` and ```find_lines_in_margin``` since it mostly came from the course lecture material with only minor modifications.
 
-![alt text][image5]
+This is an example of the output from ```find_lines```:
+
+![alt text][image11]
+
+This is an example of the output of ```find_lines_in_margin```:
+
+![alt text][image12]
 
 #### 5. Describe how (and identify where in your code) you calculated the radius of curvature of the lane and the position of the vehicle with respect to center.
 
@@ -242,6 +254,7 @@ def get_curvature(self, img):
     return self.avg_curvature
 ```
 The general idea here is:
+
 1. Generate a new best fit line through the lane line pixels using a pixels to meters conversion
 2. Calculate the radius of the curvature based on this formula:
 3. Calculate a running average of the radius of curvature over a fixed number of frames so it isn't so jittery
@@ -306,7 +319,18 @@ poly_img = self.transform(poly_img, operation="unwarp")
 img = cv2.addWeighted(img, 1, poly_img, 0.3, 0)
 ```
 
+Here is the warped polygon:
+
+![alt text][image13]
+
+Here it is unwarped:
+
+![alt text][image14]
+
 The result is a very smooth green polygon which perfectly highlights the ego-lane throughout the entire video clip. It does not jitter and perfectly hugs the left and right lane lines in every single frame.
+
+![alt text][image15]
+
 
 ### Pipeline (video)
 
