@@ -136,10 +136,10 @@ Here's an example of my output for this step.
 
 #### 3. Describe how (and identify where in your code) you performed a perspective transform and provide an example of a transformed image.
 
-The code for my perspective transform includes a function called `warper()`, which appears in lines 1 through 8 in the file `example.py` (output_images/examples/example.py) (or, for example, in the 3rd code cell of the IPython notebook).  The `warper()` function takes as inputs an image (`img`), as well as source (`src`) and destination (`dst`) points.  I chose the hardcode the source and destination points in the following manner:
+The code for my perspective transform includes a function called `transform()`, which appears starting at line 304 (number subject to change) in the file `project.py`.  The `transform()` function takes as inputs an image (`img`). Through lot's of experimentation and viewing the Udacity forums to see what values other students used, I chose to hardcode the source and destination points in the following manner:
 
 ```python
-def transform(self,img):
+def transform(self,img,operation):
     print("Perfoming perspective transform on image")
     w,h = 1280,720
     x,y = 0.5*w, 0.8*h
@@ -154,13 +154,15 @@ def transform(self,img):
 
     # Grab the image shape
     img_size = (img.shape[1], img.shape[0])
-    M = cv2.getPerspectiveTransform(src, dst)
-    #Compute the inverse perspective transform:
-    M_inv = cv2.getPerspectiveTransform(dst, src)
-    #Warp an image using the perspective transform, M:
-    warped = cv2.warpPerspective(img, M, img_size)
-    #warped = cv2.warpPerspective(img, M, img_size, flags=cv2.INTER_LINEAR)
-    return warped
+    if operation == "warp":
+        M = cv2.getPerspectiveTransform(src, dst)
+        transformed = cv2.warpPerspective(img, M, img_size)
+    elif operation == "unwarp":
+        #Compute the inverse perspective transform:
+        M_inv = cv2.getPerspectiveTransform(dst, src)
+        #Warp an image using the perspective transform, M:
+        transformed = cv2.warpPerspective(img, M_inv, img_size)
+    return transformed 
 ```
 
 This resulted in the following source and destination points:
