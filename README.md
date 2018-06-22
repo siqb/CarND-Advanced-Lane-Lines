@@ -65,7 +65,9 @@ I then used the output `objpoints` and `imgpoints` to compute the camera calibra
 
 ![alt text][image1]
 
-### Pipeline (single images)
+The ```calibrate_cameras``` method returns the camera matrix and the distortion coefficients which are used in order to undistort every single image as the first step of the video processing pipeline.
+
+### Pipeline
 
 #### 1. Provide an example of a distortion-corrected image.
 
@@ -81,11 +83,11 @@ Here is an unprocessed **distorted** image straight from the video:
 
 ![alt text][image7]
 
-Here is the same image in **undistored** form:
+Here is the same image in **undistorted** form:
 
 ![alt text][image8]
 
-Can you tell the difference? It is very subtle but it is there!
+Can you tell the difference? It is very subtle but it is there! I'll give you a hint - carefully inspect the difference in the lane lines towards the lower right hand corner.
 
 #### 2. Describe how (and identify where in your code) you used color transforms, gradients or other methods to create a thresholded binary image.  Provide an example of a binary image result.
 
