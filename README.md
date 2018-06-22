@@ -23,6 +23,16 @@ The goals / steps of this project are the following:
 [image6]: ./examples/example_output.jpg "Output"
 [video1]: ./project_video.mp4 "Video"
 
+[image7]:  ./pics/input_image.png "Input Image"
+[image8]:  ./pics/undistorted.png "Undistorted Input Image"
+[image9]:  ./pics/binary.png "Binary Image"
+[image10]: ./pics/transformed.png "Warped Binary Image"
+[image11]: ./pics/sliding_windows_best_fit.png "Sliding Windows Technique"
+[image12]: ./pics/margin_best_fit.png "Margin Around Best Fit Technique"
+[image13]: ./pics/polygon.png "Warped Polygon"
+[image14]: ./pics/polygon_unwarped.png "Unwarped Polygon"
+[image15]: ./pics/final_image.png "Final Output"
+
 ## How to Use
 
 My implementaion requires PyGame to be installed. It can be installed as follows:
@@ -121,8 +131,6 @@ Here's an example of my output for this step.  (note: this is not actually from 
 ![alt text][image3]
 
 #### 3. Describe how (and identify where in your code) you performed a perspective transform and provide an example of a transformed image.
-
-
 
 The code for my perspective transform includes a function called `warper()`, which appears in lines 1 through 8 in the file `example.py` (output_images/examples/example.py) (or, for example, in the 3rd code cell of the IPython notebook).  The `warper()` function takes as inputs an image (`img`), as well as source (`src`) and destination (`dst`) points.  I chose the hardcode the source and destination points in the following manner:
 
