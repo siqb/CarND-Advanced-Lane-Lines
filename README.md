@@ -334,7 +334,7 @@ The result is a very smooth green polygon which perfectly highlights the ego-lan
 ![alt text][image15]
 
 
-### Pipeline (video)
+### Output Video
 
 #### 1. Provide a link to your final video output.  Your pipeline should perform reasonably well on the entire project video (wobbly lines are ok but no catastrophic failures that would cause the car to drive off the road!).
 
